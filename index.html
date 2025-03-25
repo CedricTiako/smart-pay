@@ -8,29 +8,92 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#0066FF',
-                        secondary: '#00CC88',
-                        accent: '#1FB2A5',
-                    }
-                }
-            },
-            plugins: [require("daisyui")],
-            daisyui: {
-                themes: ["light", "dark", "corporate"]
-            }
+    <style>
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
-    </script>
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes glow {
+            0% { filter: drop-shadow(0 0 2px rgba(0, 102, 255, 0.5)); }
+            50% { filter: drop-shadow(0 0 15px rgba(0, 102, 255, 0.8)); }
+            100% { filter: drop-shadow(0 0 2px rgba(0, 102, 255, 0.5)); }
+        }
+
+        .logo-text {
+            font-family: 'Arial', sans-serif;
+            font-weight: bold;
+        }
+
+        .logo-container {
+            transition: all 0.3s ease;
+        }
+
+        .logo-container:hover {
+            transform: scale(1.1);
+        }
+
+        .splash-logo {
+            animation: pulse 2s infinite, glow 3s infinite;
+        }
+
+        .splash-logo .logo-svg circle {
+            animation: rotate 20s linear infinite;
+        }
+
+        .login-logo {
+            animation: glow 3s infinite;
+        }
+
+        .navbar-logo {
+            animation: pulse 3s infinite;
+        }
+
+        .logo-svg {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
 </head>
 <body>
+    <!-- Logo SVG Template -->
+    <template id="logoTemplate">
+        <svg class="logo-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#0066FF" />
+                    <stop offset="100%" style="stop-color:#00CC88" />
+                </linearGradient>
+                <filter id="glow">
+                    <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                    <feMerge>
+                        <feMergeNode in="coloredBlur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                </filter>
+            </defs>
+            <circle cx="100" cy="100" r="90" fill="url(#logoGradient)" />
+            <text x="100" y="115" text-anchor="middle" fill="white" class="logo-text" style="font-size: 48px; filter: url(#glow)">SP</text>
+            <path d="M100,50 C130,50 150,70 150,100 C150,130 130,150 100,150" 
+                  stroke="white" stroke-width="8" fill="none" 
+                  stroke-linecap="round" filter="url(#glow)" />
+            <circle cx="85" cy="100" r="8" fill="white" filter="url(#glow)" />
+        </svg>
+    </template>
+
     <!-- Splash Screen -->
     <div id="splashScreen" class="fixed inset-0 bg-gradient-to-r from-primary to-secondary z-50 flex items-center justify-center">
         <div class="text-center text-white">
-            <img src="https://via.placeholder.com/120" alt="SmartPay Logo" class="h-32 w-32 mx-auto mb-6 rounded-xl animate-bounce">
+            <div class="logo-container splash-logo w-48 h-48 mx-auto mb-8">
+                <!-- Logo will be cloned here -->
+            </div>
+            <h1 class="text-4xl font-bold mb-4 animate-pulse">SmartPay</h1>
             <span class="loading loading-spinner loading-lg"></span>
         </div>
     </div>
@@ -39,7 +102,9 @@
     <div id="loginScreen" class="fixed inset-0 bg-base-100 z-40 hidden">
         <div class="max-w-md mx-auto min-h-screen p-6 flex flex-col justify-center">
             <div class="text-center mb-8">
-                <img src="https://via.placeholder.com/80" alt="SmartPay Logo" class="h-20 w-20 mx-auto mb-4 rounded-lg shadow-lg">
+                <div class="logo-container login-logo w-32 h-32 mx-auto mb-6">
+                    <!-- Logo will be cloned here -->
+                </div>
                 <h1 class="text-2xl font-bold">Bienvenue sur SmartPay</h1>
                 <p class="text-base-content/70">La solution de paiement mobile au Cameroun</p>
             </div>
@@ -88,7 +153,9 @@
                 </div>
             </div>
             <div class="navbar-center">
-                <img src="https://via.placeholder.com/40" alt="SmartPay Logo" class="h-8 w-8 rounded-lg">
+                <div class="logo-container navbar-logo w-10 h-10">
+                    <!-- Logo will be cloned here -->
+                </div>
                 <span class="font-bold text-xl ml-2">SmartPay</span>
             </div>
             <div class="navbar-end">
@@ -262,8 +329,20 @@
             { id: 3, type: 'orange', amount: -25000, date: '23 Mars 2025', title: 'Orange Money' }
         ];
 
+        // Logo initialization
+        function initializeLogo() {
+            const template = document.getElementById('logoTemplate');
+            const logoContainers = document.querySelectorAll('.logo-container');
+            
+            logoContainers.forEach(container => {
+                const logo = template.content.cloneNode(true);
+                container.appendChild(logo);
+            });
+        }
+
         // Splash Screen
         window.onload = () => {
+            initializeLogo();
             setTimeout(() => {
                 document.getElementById('splashScreen').classList.add('hidden');
                 document.getElementById('loginScreen').classList.remove('hidden');
