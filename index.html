@@ -193,6 +193,82 @@
         #mainApp .max-w-md {
             padding-bottom: 5rem;
         }
+
+        /* Styles pour le mode sombre */
+        [data-theme="dark"] {
+            color-scheme: dark;
+        }
+
+        [data-theme="dark"] .btm-nav {
+            background: rgba(30, 41, 59, 0.8);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        [data-theme="dark"] .card {
+            background-color: rgba(30, 41, 59, 0.8);
+        }
+
+        [data-theme="dark"] .modal-box {
+            background-color: hsl(var(--b2));
+        }
+
+        [data-theme="dark"] .input {
+            background-color: hsl(var(--b2));
+        }
+
+        [data-theme="dark"] .select {
+            background-color: hsl(var(--b2));
+        }
+
+        /* Animation de transition du thème */
+        .theme-transition {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        /* Style du switch de thème */
+        .theme-switch {
+            position: relative;
+            width: 3rem;
+            height: 1.5rem;
+        }
+
+        .theme-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .theme-switch .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 1.5rem;
+        }
+
+        .theme-switch .slider:before {
+            position: absolute;
+            content: "";
+            height: 1.2rem;
+            width: 1.2rem;
+            left: 0.15rem;
+            bottom: 0.15rem;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        .theme-switch input:checked + .slider {
+            background-color: hsl(var(--p));
+        }
+
+        .theme-switch input:checked + .slider:before {
+            transform: translateX(1.5rem);
+        }
     </style>
 </head>
 <body>
@@ -393,6 +469,13 @@
                 <span class="font-bold text-xl ml-2">SmartPay</span>
             </div>
             <div class="navbar-end">
+                <label class="theme-switch mr-4" title="Changer de thème">
+                    <input type="checkbox" onchange="toggleTheme()" id="themeToggle">
+                    <span class="slider">
+                        <i class="fas fa-sun text-yellow-500"></i>
+                        <i class="fas fa-moon text-slate-800"></i>
+                    </span>
+                </label>
                 <button class="btn btn-ghost btn-circle" onclick="toggleTheme()">
                     <i class="fas fa-moon"></i>
                 </button>
@@ -624,6 +707,22 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script>
+        // Configuration de Tailwind avec thèmes personnalisés
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            100: '#1E293B',
+                            200: '#334155',
+                            300: '#475569'
+                        }
+                    }
+                }
+            }
+        }
+
         // Données de démonstration
         const demoTransactions = [
             { id: 1, type: 'orange', title: 'Dépôt Orange Money', amount: 50000, date: '25 Mars 2025', status: 'success' },
@@ -666,9 +765,51 @@
 
         // Theme Toggle
         function toggleTheme() {
-            const html = document.querySelector('html');
+            const html = document.documentElement;
             const currentTheme = html.getAttribute('data-theme');
-            html.setAttribute('data-theme', currentTheme === 'light' ? 'dark' : 'light');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            // Ajouter la classe de transition
+            document.body.classList.add('theme-transition');
+            
+            // Changer le thème
+            html.setAttribute('data-theme', newTheme);
+            
+            // Sauvegarder la préférence
+            localStorage.setItem('theme', newTheme);
+            
+            // Mettre à jour l'état du switch
+            document.getElementById('themeToggle').checked = newTheme === 'dark';
+            
+            // Animation de transition
+            setTimeout(() => {
+                document.body.classList.remove('theme-transition');
+            }, 300);
+
+            // Mettre à jour les couleurs du graphique
+            updateChartTheme(newTheme);
+        }
+
+        function updateChartTheme(theme) {
+            const chart = Chart.getChart('activityChart');
+            if (chart) {
+                const textColor = theme === 'dark' ? '#fff' : '#000';
+                const gridColor = theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+                
+                chart.options.scales.x.grid.color = gridColor;
+                chart.options.scales.y.grid.color = gridColor;
+                chart.options.scales.x.ticks.color = textColor;
+                chart.options.scales.y.ticks.color = textColor;
+                chart.update();
+            }
+        }
+
+        // Initialisation du thème
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            document.getElementById('themeToggle').checked = savedTheme === 'dark';
+            updateChartTheme(savedTheme);
         }
 
         // Biometric Authentication
@@ -1018,6 +1159,7 @@
             
             // Activer le bouton Accueil par défaut
             setActiveNavButton(0);
+            initTheme();
         });
     </script>
 </body>
