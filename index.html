@@ -231,6 +231,105 @@
         </div>
     </div>
 
+    <!-- Profile Screen -->
+    <div id="profileScreen" class="hidden">
+        <div class="navbar bg-base-100 shadow-lg sticky top-0 z-30">
+            <div class="navbar-start">
+                <button class="btn btn-ghost" onclick="showMainApp()">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+            </div>
+            <div class="navbar-center">
+                <h2 class="text-xl font-bold">Profil</h2>
+            </div>
+            <div class="navbar-end">
+                <button class="btn btn-ghost" onclick="saveProfile()">
+                    <i class="fas fa-save"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="max-w-md mx-auto p-4">
+            <div class="card bg-base-100 shadow-xl">
+                <div class="card-body">
+                    <!-- Photo de profil -->
+                    <div class="flex flex-col items-center mb-6">
+                        <div class="avatar online mb-4">
+                            <div class="w-24 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=John" alt="Profile" />
+                            </div>
+                        </div>
+                        <button class="btn btn-outline btn-sm" onclick="changeProfilePhoto()">
+                            <i class="fas fa-camera mr-2"></i> Changer la photo
+                        </button>
+                    </div>
+
+                    <!-- Informations personnelles -->
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Nom complet</span>
+                        </label>
+                        <input type="text" id="fullName" class="input input-bordered" value="John Doe" />
+                    </div>
+
+                    <div class="form-control mt-4">
+                        <label class="label">
+                            <span class="label-text">Email</span>
+                        </label>
+                        <input type="email" id="email" class="input input-bordered" value="john.doe@example.com" />
+                    </div>
+
+                    <div class="form-control mt-4">
+                        <label class="label">
+                            <span class="label-text">Téléphone</span>
+                        </label>
+                        <input type="tel" id="phone" class="input input-bordered" value="+237 6XX XXX XXX" />
+                    </div>
+
+                    <!-- Préférences -->
+                    <div class="divider mt-6">Préférences</div>
+
+                    <div class="form-control">
+                        <label class="label cursor-pointer">
+                            <span class="label-text">Notifications push</span>
+                            <input type="checkbox" class="toggle toggle-primary" checked />
+                        </label>
+                    </div>
+
+                    <div class="form-control mt-4">
+                        <label class="label cursor-pointer">
+                            <span class="label-text">Notifications SMS</span>
+                            <input type="checkbox" class="toggle toggle-primary" checked />
+                        </label>
+                    </div>
+
+                    <div class="form-control mt-4">
+                        <label class="label cursor-pointer">
+                            <span class="label-text">Authentification biométrique</span>
+                            <input type="checkbox" class="toggle toggle-primary" checked />
+                        </label>
+                    </div>
+
+                    <!-- Sécurité -->
+                    <div class="divider mt-6">Sécurité</div>
+
+                    <button class="btn btn-outline w-full mt-4" onclick="changePin()">
+                        <i class="fas fa-key mr-2"></i> Changer le code PIN
+                    </button>
+
+                    <button class="btn btn-outline w-full mt-4" onclick="showDevices()">
+                        <i class="fas fa-mobile-alt mr-2"></i> Appareils connectés
+                    </button>
+
+                    <!-- Version -->
+                    <div class="mt-8 text-center text-sm opacity-50">
+                        Version 1.0.0
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Main App -->
     <div id="mainApp" class="hidden">
         <!-- Navbar -->
@@ -244,6 +343,7 @@
                         <li><a onclick="showPremiumFeatures()"><i class="fas fa-crown text-warning"></i> Premium</a></li>
                         <li><a onclick="showSettings()"><i class="fas fa-cog"></i> Paramètres</a></li>
                         <li><a onclick="logout()"><i class="fas fa-sign-out-alt"></i> Déconnexion</a></li>
+                        <li><a onclick="showProfile()"><i class="fas fa-user mr-2"></i>Profil</a></li>
                     </ul>
                 </div>
             </div>
@@ -700,6 +800,45 @@
             document.querySelector('.stat-value:nth-child(4)').textContent = demoStats.transactionCount;
             
             animateStats();
+        }
+
+        // Profile Management
+        function showProfile() {
+            document.getElementById('mainApp').classList.add('hidden');
+            document.getElementById('profileScreen').classList.remove('hidden');
+            document.getElementById('profileScreen').classList.add('animate-fade-in-scale');
+        }
+
+        function showMainApp() {
+            document.getElementById('profileScreen').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            document.getElementById('mainApp').classList.add('animate-fade-in-scale');
+        }
+
+        function saveProfile() {
+            const fullName = document.getElementById('fullName').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+
+            // Simuler la sauvegarde
+            setTimeout(() => {
+                showSuccessToast('Profil mis à jour avec succès');
+            }, 500);
+        }
+
+        function changeProfilePhoto() {
+            // Simuler le changement de photo
+            showSuccessToast('Cette fonctionnalité sera bientôt disponible');
+        }
+
+        function changePin() {
+            // Simuler le changement de PIN
+            showSuccessToast('Cette fonctionnalité sera bientôt disponible');
+        }
+
+        function showDevices() {
+            // Simuler l'affichage des appareils
+            showSuccessToast('Cette fonctionnalité sera bientôt disponible');
         }
 
         // Initialisation
