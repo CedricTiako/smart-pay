@@ -154,6 +154,45 @@
             width: 100%;
             height: 100%;
         }
+
+        /* Style pour la barre de navigation inférieure */
+        .btm-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .btm-nav > * {
+            flex-grow: 1;
+            padding: 0.75rem 0;
+            text-align: center;
+            border: none;
+        }
+
+        .btm-nav i {
+            font-size: 1.25rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .btm-nav-label {
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .btm-nav .active {
+            color: hsl(var(--p));
+            border-top: 2px solid hsl(var(--p));
+        }
+
+        /* Ajuster le padding du contenu principal pour la barre de navigation */
+        #mainApp .max-w-md {
+            padding-bottom: 5rem;
+        }
     </style>
 </head>
 <body>
@@ -453,20 +492,24 @@
         </div>
 
         <!-- Bottom Navigation -->
-        <div class="btm-nav btm-nav-sm fixed bottom-0 z-30">
-            <button class="active" onclick="showTab('home')">
+        <div class="btm-nav">
+            <button class="active" onclick="showHome()">
                 <i class="fas fa-home"></i>
                 <span class="btm-nav-label">Accueil</span>
             </button>
-            <button onclick="showTab('analytics')">
-                <i class="fas fa-chart-line"></i>
-                <span class="btm-nav-label">Analytique</span>
+            <button onclick="showTransactionHistory()">
+                <i class="fas fa-history"></i>
+                <span class="btm-nav-label">Historique</span>
             </button>
-            <button onclick="showTab('cards')">
+            <button onclick="showNewTransaction()">
+                <i class="fas fa-plus-circle text-2xl text-primary"></i>
+                <span class="btm-nav-label">Payer</span>
+            </button>
+            <button onclick="showCards()">
                 <i class="fas fa-credit-card"></i>
                 <span class="btm-nav-label">Cartes</span>
             </button>
-            <button onclick="showTab('profile')">
+            <button onclick="showProfile()">
                 <i class="fas fa-user"></i>
                 <span class="btm-nav-label">Profil</span>
             </button>
@@ -513,6 +556,67 @@
         <div class="alert alert-success">
             <i class="fas fa-check-circle"></i>
             <span id="toastMessage">Message</span>
+        </div>
+    </div>
+
+    <!-- Transaction History Screen -->
+    <div id="historyScreen" class="hidden">
+        <div class="navbar bg-base-100 shadow-lg sticky top-0 z-30">
+            <div class="navbar-center">
+                <h2 class="text-xl font-bold">Historique</h2>
+            </div>
+        </div>
+        <div class="max-w-md mx-auto p-4 pb-20">
+            <div class="flex flex-col gap-4 p-4">
+                <div class="join w-full">
+                    <input type="text" placeholder="Rechercher une transaction..." class="input input-bordered join-item flex-1" onkeyup="filterTransactions()" id="searchInput" />
+                    <select class="select select-bordered join-item" onchange="filterTransactions()" id="typeFilter">
+                        <option value="">Tous les types</option>
+                        <option value="orange">Orange Money</option>
+                        <option value="mtn">MTN Mobile Money</option>
+                    </select>
+                </div>
+                <select class="select select-bordered w-full" onchange="filterTransactions()" id="dateFilter">
+                    <option value="">Toutes les dates</option>
+                    <option value="today">Aujourd'hui</option>
+                    <option value="week">Cette semaine</option>
+                    <option value="month">Ce mois</option>
+                </select>
+            </div>
+            <div id="historyList" class="space-y-4"></div>
+        </div>
+    </div>
+
+    <!-- Cards Screen -->
+    <div id="cardsScreen" class="hidden">
+        <div class="navbar bg-base-100 shadow-lg sticky top-0 z-30">
+            <div class="navbar-center">
+                <h2 class="text-xl font-bold">Mes Cartes</h2>
+            </div>
+        </div>
+        <div class="max-w-md mx-auto p-4 pb-20">
+            <div class="card bg-gradient-to-r from-primary to-secondary text-white shadow-xl mb-4">
+                <div class="card-body">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="text-lg font-bold">Carte Virtuelle</h3>
+                            <p class="opacity-75">**** **** **** 1234</p>
+                        </div>
+                        <i class="fas fa-wifi rotate-90"></i>
+                    </div>
+                    <div class="mt-4">
+                        <p class="text-sm opacity-75">VALABLE JUSQU'À</p>
+                        <p>12/25</p>
+                    </div>
+                    <div class="mt-4">
+                        <p class="text-sm opacity-75">TITULAIRE</p>
+                        <p>John Doe</p>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-primary w-full" onclick="addNewCard()">
+                <i class="fas fa-plus mr-2"></i> Ajouter une carte
+            </button>
         </div>
     </div>
 
@@ -841,6 +945,59 @@
             showSuccessToast('Cette fonctionnalité sera bientôt disponible');
         }
 
+        // Navigation Functions
+        function showHome() {
+            hideAllScreens();
+            document.getElementById('mainApp').classList.remove('hidden');
+            setActiveNavButton(0);
+        }
+
+        function showTransactionHistory() {
+            hideAllScreens();
+            document.getElementById('historyScreen').classList.remove('hidden');
+            document.getElementById('historyList').innerHTML = document.getElementById('transactionsList').innerHTML;
+            setActiveNavButton(1);
+        }
+
+        function showNewTransaction() {
+            document.getElementById('transactionModal').showModal();
+            setActiveNavButton(2);
+        }
+
+        function showCards() {
+            hideAllScreens();
+            document.getElementById('cardsScreen').classList.remove('hidden');
+            setActiveNavButton(3);
+        }
+
+        function showProfile() {
+            hideAllScreens();
+            document.getElementById('profileScreen').classList.remove('hidden');
+            setActiveNavButton(4);
+        }
+
+        function hideAllScreens() {
+            const screens = ['mainApp', 'historyScreen', 'cardsScreen', 'profileScreen'];
+            screens.forEach(screen => {
+                document.getElementById(screen).classList.add('hidden');
+            });
+        }
+
+        function setActiveNavButton(index) {
+            const buttons = document.querySelectorAll('.btm-nav button');
+            buttons.forEach((btn, i) => {
+                if (i === index) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        function addNewCard() {
+            showSuccessToast('Cette fonctionnalité sera bientôt disponible');
+        }
+
         // Initialisation
         window.addEventListener('load', () => {
             initializeLogo();
@@ -858,6 +1015,9 @@
                     document.getElementById('loginScreen').classList.add('animate-fade-in-scale');
                 }, 500);
             }, 2000);
+            
+            // Activer le bouton Accueil par défaut
+            setActiveNavButton(0);
         });
     </script>
 </body>
