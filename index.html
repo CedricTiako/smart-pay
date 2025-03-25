@@ -330,17 +330,20 @@
 
             <!-- Recent Transactions -->
             <div class="mx-4 mt-4">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-semibold text-lg">Transactions récentes</h3>
-                    <div class="dropdown dropdown-end">
-                        <label tabindex="0" class="btn btn-ghost btn-circle">
-                            <i class="fas fa-filter"></i>
-                        </label>
-                        <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
-                            <li><a onclick="filterTransactions('all')">Toutes</a></li>
-                            <li><a onclick="filterTransactions('in')">Entrées</a></li>
-                            <li><a onclick="filterTransactions('out')">Sorties</a></li>
-                        </ul>
+                <div class="flex flex-col gap-4 p-4">
+                    <div class="join w-full">
+                        <input type="text" placeholder="Rechercher une transaction..." class="input input-bordered join-item flex-1" onkeyup="filterTransactions()" id="searchInput" />
+                        <select class="select select-bordered join-item" onchange="filterTransactions()" id="typeFilter">
+                            <option value="">Tous les types</option>
+                            <option value="orange">Orange Money</option>
+                            <option value="mtn">MTN Mobile Money</option>
+                        </select>
+                        <select class="select select-bordered join-item" onchange="filterTransactions()" id="dateFilter">
+                            <option value="">Toutes les dates</option>
+                            <option value="today">Aujourd'hui</option>
+                            <option value="week">Cette semaine</option>
+                            <option value="month">Ce mois</option>
+                        </select>
                     </div>
                 </div>
                 <div id="transactionsList" class="space-y-4">
@@ -417,12 +420,25 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script>
-        // Demo Data
-        const transactions = [
-            { id: 1, type: 'orange', amount: -50000, date: '25 Mars 2025', title: 'Orange Money' },
-            { id: 2, type: 'mtn', amount: 100000, date: '24 Mars 2025', title: 'MTN Mobile Money' },
-            { id: 3, type: 'orange', amount: -25000, date: '23 Mars 2025', title: 'Orange Money' }
+        // Données de démonstration
+        const demoTransactions = [
+            { id: 1, type: 'orange', title: 'Dépôt Orange Money', amount: 50000, date: '25 Mars 2025', status: 'success' },
+            { id: 2, type: 'mtn', title: 'Transfert MTN Mobile Money', amount: -25000, date: '24 Mars 2025', status: 'success' },
+            { id: 3, type: 'orange', title: 'Paiement Facture ENEO', amount: -15000, date: '23 Mars 2025', status: 'success' },
+            { id: 4, type: 'mtn', title: 'Recharge Crédit', amount: -2000, date: '23 Mars 2025', status: 'success' },
+            { id: 5, type: 'orange', title: 'Dépôt Orange Money', amount: 100000, date: '22 Mars 2025', status: 'success' },
+            { id: 6, type: 'mtn', title: 'Paiement Canal+', amount: -20000, date: '21 Mars 2025', status: 'success' },
+            { id: 7, type: 'orange', title: 'Transfert vers John Doe', amount: -35000, date: '20 Mars 2025', status: 'success' },
+            { id: 8, type: 'mtn', title: 'Dépôt MTN Mobile Money', amount: 75000, date: '19 Mars 2025', status: 'success' }
         ];
+
+        // Stats de démonstration
+        const demoStats = {
+            totalBalance: 250000,
+            monthlyIncome: 225000,
+            monthlyExpenses: 97000,
+            transactionCount: 24
+        };
 
         // Logo initialization
         function initializeLogo() {
@@ -523,19 +539,28 @@
         }
 
         function addTransaction(transaction) {
-            transactions.unshift(transaction);
+            demoTransactions.unshift(transaction);
             loadTransactions();
             updateChart();
         }
 
         function loadTransactions() {
+            displayTransactions(demoTransactions);
+            updateStats();
+        }
+
+        function displayTransactions(transactions) {
             const list = document.getElementById('transactionsList');
-            list.innerHTML = transactions.map(t => `
-                <div class="card bg-base-100 shadow-sm opacity-0">
+            list.innerHTML = '';
+            
+            transactions.forEach(t => {
+                const div = document.createElement('div');
+                div.className = 'card bg-base-100 shadow-sm mb-4 opacity-0';
+                div.innerHTML = `
                     <div class="card-body p-4 flex flex-row items-center">
                         <div class="avatar placeholder mr-4">
                             <div class="bg-${t.type === 'orange' ? 'orange' : 'yellow'}-100 text-${t.type === 'orange' ? 'orange' : 'yellow'}-500 rounded-full w-12">
-                                <i class="fas fa-${t.type === 'transfer' ? 'paper-plane' : 'money-bill-wave'}"></i>
+                                <i class="fas fa-${t.amount > 0 ? 'money-bill-wave' : 'paper-plane'}"></i>
                             </div>
                         </div>
                         <div class="flex-1">
@@ -544,18 +569,48 @@
                         </div>
                         <span class="font-semibold ${t.amount > 0 ? 'text-success' : 'text-error'}">${t.amount > 0 ? '+' : ''}${t.amount.toLocaleString()} FCFA</span>
                     </div>
-                </div>
-            `).join('');
-            
-            // Animation des transactions
-            const cards = document.querySelectorAll('.card');
-            cards.forEach(card => {
+                `;
+                list.appendChild(div);
+                
                 setTimeout(() => {
-                    card.style.transition = 'all 0.5s ease';
-                    card.style.transform = 'translateY(0)';
-                    card.style.opacity = '1';
+                    div.style.transition = 'all 0.5s ease';
+                    div.style.opacity = '1';
+                    div.style.transform = 'translateY(0)';
                 }, 50);
             });
+        }
+
+        function filterTransactions() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const typeFilter = document.getElementById('typeFilter').value;
+            const dateFilter = document.getElementById('dateFilter').value;
+
+            const filteredTransactions = demoTransactions.filter(t => {
+                const matchesSearch = t.title.toLowerCase().includes(searchTerm);
+                const matchesType = !typeFilter || t.type === typeFilter;
+                const matchesDate = !dateFilter || isWithinDateRange(t.date, dateFilter);
+                return matchesSearch && matchesType && matchesDate;
+            });
+
+            displayTransactions(filteredTransactions);
+        }
+
+        function isWithinDateRange(dateStr, range) {
+            const transactionDate = new Date(dateStr);
+            const now = new Date();
+            
+            switch(range) {
+                case 'today':
+                    return transactionDate.toDateString() === now.toDateString();
+                case 'week':
+                    const weekAgo = new Date(now.setDate(now.getDate() - 7));
+                    return transactionDate >= weekAgo;
+                case 'month':
+                    const monthAgo = new Date(now.setMonth(now.getMonth() - 1));
+                    return transactionDate >= monthAgo;
+                default:
+                    return true;
+            }
         }
 
         // Chart
@@ -636,6 +691,15 @@
                     stat.textContent = Math.floor(current).toLocaleString() + (stat.textContent.includes('FCFA') ? ' FCFA' : '');
                 }, 20);
             });
+        }
+
+        function updateStats() {
+            document.querySelector('.stat-value:nth-child(1)').textContent = `${demoStats.totalBalance.toLocaleString()} FCFA`;
+            document.querySelector('.stat-value:nth-child(2)').textContent = `${demoStats.monthlyIncome.toLocaleString()} FCFA`;
+            document.querySelector('.stat-value:nth-child(3)').textContent = `${demoStats.monthlyExpenses.toLocaleString()} FCFA`;
+            document.querySelector('.stat-value:nth-child(4)').textContent = demoStats.transactionCount;
+            
+            animateStats();
         }
 
         // Initialisation
