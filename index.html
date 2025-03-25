@@ -9,6 +9,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js">
     <style>
+        /* Animations existantes */
         @keyframes pulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.05); }
@@ -26,6 +27,100 @@
             100% { filter: drop-shadow(0 0 2px rgba(0, 102, 255, 0.5)); }
         }
 
+        /* Nouvelles animations */
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes fadeInScale {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .animate-slide-in {
+            animation: slideIn 0.5s ease-out forwards;
+        }
+
+        .animate-fade-in-scale {
+            animation: fadeInScale 0.5s ease-out forwards;
+        }
+
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .shimmer {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            background-size: 1000px 100%;
+            animation: shimmer 2s infinite linear;
+        }
+
+        /* Animations des cartes */
+        .card {
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .card.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        /* Animations des boutons */
+        .btn {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255,255,255,.5);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%);
+            transform-origin: 50% 50%;
+        }
+
+        .btn:hover:after {
+            animation: ripple 1s ease-out;
+        }
+
+        @keyframes ripple {
+            0% {
+                transform: scale(0, 0);
+                opacity: 0.5;
+            }
+            100% {
+                transform: scale(40, 40);
+                opacity: 0;
+            }
+        }
+
+        /* Style existant */
         .logo-text {
             font-family: 'Arial', sans-serif;
             font-weight: bold;
@@ -374,11 +469,17 @@
         });
 
         function loginSuccess() {
-            document.getElementById('loginScreen').classList.add('hidden');
-            document.getElementById('mainApp').classList.remove('hidden');
-            loadTransactions();
-            initChart();
-            showSuccessToast('Connexion réussie');
+            document.getElementById('loginScreen').style.transition = 'all 0.5s ease';
+            document.getElementById('loginScreen').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                document.getElementById('mainApp').classList.add('animate-fade-in-scale');
+                loadTransactions();
+                initChart();
+                animateStats();
+                showSuccessToast('Connexion réussie');
+            }, 500);
         }
 
         // Transaction Handlers
@@ -430,7 +531,7 @@
         function loadTransactions() {
             const list = document.getElementById('transactionsList');
             list.innerHTML = transactions.map(t => `
-                <div class="card bg-base-100 shadow-sm">
+                <div class="card bg-base-100 shadow-sm opacity-0">
                     <div class="card-body p-4 flex flex-row items-center">
                         <div class="avatar placeholder mr-4">
                             <div class="bg-${t.type === 'orange' ? 'orange' : 'yellow'}-100 text-${t.type === 'orange' ? 'orange' : 'yellow'}-500 rounded-full w-12">
@@ -445,6 +546,16 @@
                     </div>
                 </div>
             `).join('');
+            
+            // Animation des transactions
+            const cards = document.querySelectorAll('.card');
+            cards.forEach(card => {
+                setTimeout(() => {
+                    card.style.transition = 'all 0.5s ease';
+                    card.style.transform = 'translateY(0)';
+                    card.style.opacity = '1';
+                }, 50);
+            });
         }
 
         // Chart
@@ -496,6 +607,55 @@
         function showPremiumFeatures() {
             showSuccessToast('Fonctionnalités Premium bientôt disponibles!');
         }
+
+        // Animation des cartes au défilement
+        function animateOnScroll() {
+            const cards = document.querySelectorAll('.card:not(.show)');
+            cards.forEach(card => {
+                const cardTop = card.getBoundingClientRect().top;
+                const windowHeight = window.innerHeight;
+                if (cardTop < windowHeight - 100) {
+                    card.classList.add('show');
+                }
+            });
+        }
+
+        // Animation des statistiques
+        function animateStats() {
+            const stats = document.querySelectorAll('.stat-value');
+            stats.forEach(stat => {
+                const value = parseInt(stat.textContent.replace(/[^0-9]/g, ''));
+                let current = 0;
+                const increment = value / 50;
+                const interval = setInterval(() => {
+                    current += increment;
+                    if (current >= value) {
+                        current = value;
+                        clearInterval(interval);
+                    }
+                    stat.textContent = Math.floor(current).toLocaleString() + (stat.textContent.includes('FCFA') ? ' FCFA' : '');
+                }, 20);
+            });
+        }
+
+        // Initialisation
+        window.addEventListener('load', () => {
+            initializeLogo();
+            document.addEventListener('scroll', animateOnScroll);
+            animateOnScroll();
+            
+            // Animation du splash screen
+            setTimeout(() => {
+                const splash = document.getElementById('splashScreen');
+                splash.style.transition = 'all 0.5s ease';
+                splash.style.opacity = '0';
+                setTimeout(() => {
+                    splash.classList.add('hidden');
+                    document.getElementById('loginScreen').classList.remove('hidden');
+                    document.getElementById('loginScreen').classList.add('animate-fade-in-scale');
+                }, 500);
+            }, 2000);
+        });
     </script>
 </body>
 </html>
