@@ -1,132 +1,422 @@
 <!DOCTYPE html>
-<html lang="fr" class="light">
+<html lang="fr" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SmartPay - Solution de Paiement au Cameroun</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.2/dist/full.min.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js">
     <script>
         tailwind.config = {
-            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
                         primary: '#0066FF',
                         secondary: '#00CC88',
-                        dark: '#1F2937',
+                        accent: '#1FB2A5',
                     }
                 }
+            },
+            plugins: [require("daisyui")],
+            daisyui: {
+                themes: ["light", "dark", "corporate"]
             }
         }
     </script>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-white">
-    <!-- Main Container -->
-    <div class="max-w-md mx-auto min-h-screen pb-20">
-        <!-- Header with Theme Toggle -->
-        <header class="p-4 flex justify-between items-center">
-            <div class="flex items-center space-x-2">
-                <img src="https://via.placeholder.com/40" alt="SmartPay Logo" class="h-10 w-10 rounded-lg">
-                <span class="font-bold text-xl">SmartPay</span>
-            </div>
-            <button id="themeToggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
-                <i class="fas fa-moon dark:hidden"></i>
-                <i class="fas fa-sun hidden dark:block"></i>
-            </button>
-        </header>
+<body>
+    <!-- Splash Screen -->
+    <div id="splashScreen" class="fixed inset-0 bg-gradient-to-r from-primary to-secondary z-50 flex items-center justify-center">
+        <div class="text-center text-white">
+            <img src="https://via.placeholder.com/120" alt="SmartPay Logo" class="h-32 w-32 mx-auto mb-6 rounded-xl animate-bounce">
+            <span class="loading loading-spinner loading-lg"></span>
+        </div>
+    </div>
 
-        <!-- Balance Card -->
-        <div class="mx-4 p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg mb-6">
-            <p class="text-gray-600 dark:text-gray-400 mb-1">Solde disponible</p>
-            <h2 class="text-3xl font-bold mb-4">2,500,000 FCFA</h2>
-            <div class="grid grid-cols-2 gap-4 text-sm">
-                <div class="flex items-center text-green-500">
-                    <i class="fas fa-arrow-up mr-1"></i>
-                    <span>+500,000 FCFA</span>
-                </div>
-                <div class="flex items-center text-red-500">
-                    <i class="fas fa-arrow-down mr-1"></i>
-                    <span>-350,000 FCFA</span>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="fixed inset-0 bg-base-100 z-40 hidden">
+        <div class="max-w-md mx-auto min-h-screen p-6 flex flex-col justify-center">
+            <div class="text-center mb-8">
+                <img src="https://via.placeholder.com/80" alt="SmartPay Logo" class="h-20 w-20 mx-auto mb-4 rounded-lg shadow-lg">
+                <h1 class="text-2xl font-bold">Bienvenue sur SmartPay</h1>
+                <p class="text-base-content/70">La solution de paiement mobile au Cameroun</p>
+            </div>
+            <div class="card bg-base-200 shadow-xl">
+                <div class="card-body">
+                    <form id="loginForm" class="space-y-4">
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Numéro de téléphone</span>
+                            </label>
+                            <input type="tel" placeholder="6xx xxx xxx" class="input input-bordered" required>
+                        </div>
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Mot de passe</span>
+                            </label>
+                            <input type="password" placeholder="••••••••" class="input input-bordered" required>
+                        </div>
+                        <div class="mt-2">
+                            <button type="button" onclick="simulateBiometric()" class="btn btn-outline btn-circle btn-lg mx-auto block">
+                                <i class="fas fa-fingerprint text-2xl"></i>
+                            </button>
+                            <p class="text-center mt-2 text-sm">Ou utilisez votre empreinte</p>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-full">Se connecter</button>
+                    </form>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Quick Actions -->
-        <div class="grid grid-cols-3 gap-4 mx-4 mb-6">
-            <button class="flex flex-col items-center p-4 bg-blue-500 text-white rounded-xl">
-                <i class="fas fa-plus mb-2"></i>
-                <span class="text-sm">Dépôt</span>
-            </button>
-            <button class="flex flex-col items-center p-4 bg-green-500 text-white rounded-xl">
-                <i class="fas fa-paper-plane mb-2"></i>
-                <span class="text-sm">Transfert</span>
-            </button>
-            <button class="flex flex-col items-center p-4 bg-purple-500 text-white rounded-xl">
-                <i class="fas fa-money-bill-wave mb-2"></i>
-                <span class="text-sm">Retrait</span>
-            </button>
+    <!-- Main App -->
+    <div id="mainApp" class="hidden">
+        <!-- Navbar -->
+        <div class="navbar bg-base-100 shadow-lg sticky top-0 z-30">
+            <div class="navbar-start">
+                <div class="dropdown">
+                    <label tabindex="0" class="btn btn-ghost btn-circle">
+                        <i class="fas fa-bars"></i>
+                    </label>
+                    <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
+                        <li><a onclick="showPremiumFeatures()"><i class="fas fa-crown text-warning"></i> Premium</a></li>
+                        <li><a onclick="showSettings()"><i class="fas fa-cog"></i> Paramètres</a></li>
+                        <li><a onclick="logout()"><i class="fas fa-sign-out-alt"></i> Déconnexion</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="navbar-center">
+                <img src="https://via.placeholder.com/40" alt="SmartPay Logo" class="h-8 w-8 rounded-lg">
+                <span class="font-bold text-xl ml-2">SmartPay</span>
+            </div>
+            <div class="navbar-end">
+                <button class="btn btn-ghost btn-circle" onclick="toggleTheme()">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button class="btn btn-ghost btn-circle indicator" onclick="showNotifications()">
+                    <i class="fas fa-bell"></i>
+                    <span class="badge badge-sm indicator-item badge-primary">3</span>
+                </button>
+            </div>
         </div>
 
-        <!-- Recent Transactions -->
-        <div class="mx-4">
-            <h3 class="font-semibold mb-4">Transactions récentes</h3>
-            <div class="space-y-4">
-                <!-- Transaction Item -->
-                <div class="bg-white dark:bg-gray-800 p-4 rounded-xl flex items-center">
-                    <div class="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center mr-4">
-                        <img src="https://via.placeholder.com/40" alt="Orange Money" class="h-6 w-6">
-                    </div>
-                    <div class="flex-1">
-                        <h4 class="font-medium">Orange Money</h4>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">25 Mars 2025</p>
-                    </div>
-                    <span class="font-semibold text-red-500">-50,000 FCFA</span>
+        <!-- Main Content -->
+        <div class="max-w-md mx-auto pb-20">
+            <!-- Stats Cards -->
+            <div class="stats shadow mx-4 mt-4">
+                <div class="stat">
+                    <div class="stat-title">Solde Total</div>
+                    <div class="stat-value">2,500,000</div>
+                    <div class="stat-desc">FCFA</div>
                 </div>
+                <div class="stat">
+                    <div class="stat-title">Points Fidélité</div>
+                    <div class="stat-value text-secondary">250</div>
+                    <div class="stat-desc text-secondary">+15% ce mois</div>
+                </div>
+            </div>
 
-                <!-- More Transaction Items -->
-                <div class="bg-white dark:bg-gray-800 p-4 rounded-xl flex items-center">
-                    <div class="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center mr-4">
-                        <img src="https://via.placeholder.com/40" alt="MTN MoMo" class="h-6 w-6">
+            <!-- Virtual Card -->
+            <div class="card bg-gradient-to-r from-primary to-secondary text-white mx-4 mt-4">
+                <div class="card-body">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="card-title">Carte Premium</h3>
+                            <p class="opacity-75">**** **** **** 4242</p>
+                        </div>
+                        <i class="fas fa-wifi transform rotate-90"></i>
                     </div>
-                    <div class="flex-1">
-                        <h4 class="font-medium">MTN Mobile Money</h4>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">24 Mars 2025</p>
+                    <div class="mt-4">
+                        <p class="text-sm opacity-75">TITULAIRE</p>
+                        <p>JOHN DOE</p>
                     </div>
-                    <span class="font-semibold text-green-500">+100,000 FCFA</span>
+                    <div class="flex justify-between items-center mt-2">
+                        <div>
+                            <p class="text-sm opacity-75">EXPIRE</p>
+                            <p>12/25</p>
+                        </div>
+                        <img src="https://via.placeholder.com/60" alt="Visa" class="h-8">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="grid grid-cols-3 gap-4 mx-4 mt-4">
+                <button onclick="showTransactionModal('deposit')" class="btn btn-primary">
+                    <i class="fas fa-plus"></i>
+                    <span>Dépôt</span>
+                </button>
+                <button onclick="showTransactionModal('transfer')" class="btn btn-secondary">
+                    <i class="fas fa-paper-plane"></i>
+                    <span>Transfert</span>
+                </button>
+                <button onclick="showTransactionModal('withdraw')" class="btn btn-accent">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Retrait</span>
+                </button>
+            </div>
+
+            <!-- Activity Chart -->
+            <div class="card bg-base-100 shadow-xl mx-4 mt-4">
+                <div class="card-body">
+                    <h3 class="card-title">Activité récente</h3>
+                    <canvas id="activityChart" class="w-full h-48"></canvas>
+                </div>
+            </div>
+
+            <!-- Recent Transactions -->
+            <div class="mx-4 mt-4">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-semibold text-lg">Transactions récentes</h3>
+                    <div class="dropdown dropdown-end">
+                        <label tabindex="0" class="btn btn-ghost btn-circle">
+                            <i class="fas fa-filter"></i>
+                        </label>
+                        <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+                            <li><a onclick="filterTransactions('all')">Toutes</a></li>
+                            <li><a onclick="filterTransactions('in')">Entrées</a></li>
+                            <li><a onclick="filterTransactions('out')">Sorties</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div id="transactionsList" class="space-y-4">
+                    <!-- Transactions will be loaded dynamically -->
                 </div>
             </div>
         </div>
 
         <!-- Bottom Navigation -->
-        <nav class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t dark:border-gray-700">
-            <div class="max-w-md mx-auto flex justify-around p-3">
-                <a href="#" class="flex flex-col items-center text-primary">
-                    <i class="fas fa-home"></i>
-                    <span class="text-xs mt-1">Accueil</span>
-                </a>
-                <a href="#" class="flex flex-col items-center text-gray-500 dark:text-gray-400">
-                    <i class="fas fa-credit-card"></i>
-                    <span class="text-xs mt-1">Cartes</span>
-                </a>
-                <a href="#" class="flex flex-col items-center text-gray-500 dark:text-gray-400">
-                    <i class="fas fa-history"></i>
-                    <span class="text-xs mt-1">Historique</span>
-                </a>
-                <a href="#" class="flex flex-col items-center text-gray-500 dark:text-gray-400">
-                    <i class="fas fa-user"></i>
-                    <span class="text-xs mt-1">Profil</span>
-                </a>
-            </div>
-        </nav>
+        <div class="btm-nav btm-nav-sm fixed bottom-0 z-30">
+            <button class="active" onclick="showTab('home')">
+                <i class="fas fa-home"></i>
+                <span class="btm-nav-label">Accueil</span>
+            </button>
+            <button onclick="showTab('analytics')">
+                <i class="fas fa-chart-line"></i>
+                <span class="btm-nav-label">Analytique</span>
+            </button>
+            <button onclick="showTab('cards')">
+                <i class="fas fa-credit-card"></i>
+                <span class="btm-nav-label">Cartes</span>
+            </button>
+            <button onclick="showTab('profile')">
+                <i class="fas fa-user"></i>
+                <span class="btm-nav-label">Profil</span>
+            </button>
+        </div>
     </div>
 
+    <!-- Transaction Modal Template -->
+    <dialog id="transactionModal" class="modal">
+        <form method="dialog" class="modal-box">
+            <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            <h3 class="font-bold text-lg mb-4" id="modalTitle">Transaction</h3>
+            <div class="space-y-4">
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">Méthode de paiement</span>
+                    </label>
+                    <select class="select select-bordered w-full">
+                        <option value="orange">Orange Money</option>
+                        <option value="mtn">MTN Mobile Money</option>
+                    </select>
+                </div>
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text">Montant (FCFA)</span>
+                    </label>
+                    <input type="number" class="input input-bordered" required>
+                </div>
+                <div id="pinContainer" class="form-control">
+                    <label class="label">
+                        <span class="label-text">Code PIN</span>
+                    </label>
+                    <input type="password" maxlength="4" class="input input-bordered" placeholder="****" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-full" onclick="processTransaction()">Confirmer</button>
+            </div>
+        </form>
+        <form method="dialog" class="modal-backdrop">
+            <button>Fermer</button>
+        </form>
+    </dialog>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast toast-end hidden">
+        <div class="alert alert-success">
+            <i class="fas fa-check-circle"></i>
+            <span id="toastMessage">Message</span>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script>
-        // Theme Toggle Functionality
-        const themeToggle = document.getElementById('themeToggle');
-        themeToggle.addEventListener('click', () => {
-            document.documentElement.classList.toggle('dark');
+        // Demo Data
+        const transactions = [
+            { id: 1, type: 'orange', amount: -50000, date: '25 Mars 2025', title: 'Orange Money' },
+            { id: 2, type: 'mtn', amount: 100000, date: '24 Mars 2025', title: 'MTN Mobile Money' },
+            { id: 3, type: 'orange', amount: -25000, date: '23 Mars 2025', title: 'Orange Money' }
+        ];
+
+        // Splash Screen
+        window.onload = () => {
+            setTimeout(() => {
+                document.getElementById('splashScreen').classList.add('hidden');
+                document.getElementById('loginScreen').classList.remove('hidden');
+            }, 2000);
+        };
+
+        // Theme Toggle
+        function toggleTheme() {
+            const html = document.querySelector('html');
+            const currentTheme = html.getAttribute('data-theme');
+            html.setAttribute('data-theme', currentTheme === 'light' ? 'dark' : 'light');
+        }
+
+        // Biometric Authentication
+        function simulateBiometric() {
+            const btn = event.currentTarget;
+            btn.classList.add('loading');
+            setTimeout(() => {
+                btn.classList.remove('loading');
+                showSuccessToast('Authentification biométrique réussie');
+                loginSuccess();
+            }, 1500);
+        }
+
+        // Login Handler
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            loginSuccess();
         });
+
+        function loginSuccess() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            loadTransactions();
+            initChart();
+            showSuccessToast('Connexion réussie');
+        }
+
+        // Transaction Handlers
+        function showTransactionModal(type) {
+            const modal = document.getElementById('transactionModal');
+            const title = document.getElementById('modalTitle');
+            title.textContent = type === 'deposit' ? 'Dépôt' : type === 'transfer' ? 'Transfert' : 'Retrait';
+            modal.showModal();
+        }
+
+        function processTransaction() {
+            const amount = document.querySelector('#transactionModal input[type="number"]').value;
+            const type = document.querySelector('#transactionModal select').value;
+            
+            // Simulate loading
+            event.target.classList.add('loading');
+            
+            setTimeout(() => {
+                event.target.classList.remove('loading');
+                addTransaction({
+                    type,
+                    amount: parseInt(amount),
+                    date: new Date().toLocaleDateString('fr-FR'),
+                    title: type === 'orange' ? 'Orange Money' : 'MTN Mobile Money'
+                });
+                
+                // Show success animation
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+                
+                showSuccessToast('Transaction réussie!');
+                
+                // Simulate SMS
+                setTimeout(() => {
+                    showSuccessToast('SMS de confirmation envoyé');
+                }, 1000);
+            }, 1500);
+        }
+
+        function addTransaction(transaction) {
+            transactions.unshift(transaction);
+            loadTransactions();
+            updateChart();
+        }
+
+        function loadTransactions() {
+            const list = document.getElementById('transactionsList');
+            list.innerHTML = transactions.map(t => `
+                <div class="card bg-base-100 shadow-sm">
+                    <div class="card-body p-4 flex flex-row items-center">
+                        <div class="avatar placeholder mr-4">
+                            <div class="bg-${t.type === 'orange' ? 'orange' : 'yellow'}-100 text-${t.type === 'orange' ? 'orange' : 'yellow'}-500 rounded-full w-12">
+                                <i class="fas fa-${t.type === 'transfer' ? 'paper-plane' : 'money-bill-wave'}"></i>
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="font-medium">${t.title}</h4>
+                            <p class="text-sm opacity-70">${t.date}</p>
+                        </div>
+                        <span class="font-semibold ${t.amount > 0 ? 'text-success' : 'text-error'}">${t.amount > 0 ? '+' : ''}${t.amount.toLocaleString()} FCFA</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Chart
+        function initChart() {
+            const ctx = document.getElementById('activityChart').getContext('2d');
+            window.myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+                    datasets: [{
+                        label: 'Activité',
+                        data: [65, 59, 80, 81, 56, 55, 40],
+                        fill: true,
+                        borderColor: '#0066FF',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateChart() {
+            const newData = [...window.myChart.data.datasets[0].data];
+            newData.shift();
+            newData.push(Math.floor(Math.random() * 100));
+            window.myChart.data.datasets[0].data = newData;
+            window.myChart.update();
+        }
+
+        // Toast
+        function showSuccessToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            toastMessage.textContent = message;
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+
+        // Premium Features
+        function showPremiumFeatures() {
+            showSuccessToast('Fonctionnalités Premium bientôt disponibles!');
+        }
     </script>
 </body>
 </html>
